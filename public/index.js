@@ -15,12 +15,19 @@ const start = () =>
     const nameSubmitBtn = sketch.createButton("submit");
     const everybodyInBtn = sketch.createButton("Everybody's in!").hide();
 
+    let img;
+    sketch.preload = () => {
+      img = sketch.loadImage("assets/1.png");
+    }
+    
     // eslint-disable-next-line no-param-reassign
     sketch.setup = () => {
       sketch.createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
       sketch.textAlign(sketch.CENTER);
       sketch.background(60);
       sketch.textSize(24);
+      sketch.image(img, 100, 0);
+      
 
       nameSubmitBtn.mousePressed(() => {
         console.log("submit pressed", nameInput.value());
