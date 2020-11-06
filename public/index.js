@@ -10,11 +10,7 @@ const start = () => new P5((sketch) => {
   // login elements
   const nameInput = sketch.createInput().attribute('placeholder', 'Enter you name');
   const nameSubmitBtn = sketch.createButton('submit');
-
-
-
-
-
+  const everybodyInBtn = sketch.createButton("Everybody's in!").hide();
 
   // eslint-disable-next-line no-param-reassign
   sketch.setup = () => {
@@ -31,8 +27,7 @@ const start = () => new P5((sketch) => {
         nameSubmitBtn.hide();
         sketch.text(`${nameInput.value()}: ${assignedRole}`, CANVAS_WIDTH - 150, 30);
       });
-
-      const everybodyInBtn = sketch.createButton("Everybody's in!").center();
+      everybodyInBtn.show();
       everybodyInBtn.mousePressed(() => {
         socket.emit('gameStart');
         everybodyInBtn.hide();
@@ -49,6 +44,7 @@ const start = () => new P5((sketch) => {
   // eslint-disable-next-line no-param-reassign
   sketch.draw = () => {
     nameInput.center();
+    everybodyInBtn.center();
     nameSubmitBtn.position(nameInput.x + nameInput.width + 10, nameInput.y);
 
   };
