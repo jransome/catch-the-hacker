@@ -13,7 +13,7 @@ const start = () => new P5((sketch) => {
 
 
 
-  
+
 
 
   // eslint-disable-next-line no-param-reassign
@@ -21,18 +21,26 @@ const start = () => new P5((sketch) => {
     sketch.createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
     sketch.textAlign(sketch.CENTER);
     sketch.background(60);
-    
+    sketch.textSize(24);
+
     nameSubmitBtn.mousePressed(() => {
       console.log('submit pressed', nameInput.value());
       if (!nameInput.value()) return;
       socket.emit('login', nameInput.value(), (assignedRole) => {
         nameInput.hide();
         nameSubmitBtn.hide();
-        
-        sketch.textSize(24);
-        const roleIndicator = sketch.text(`${nameInput.value()}: ${assignedRole}`, CANVAS_WIDTH - 150, 30);
+        sketch.text(`${nameInput.value()}: ${assignedRole}`, CANVAS_WIDTH - 150, 30);
       });
-      // roleIndicator.show();
+
+      const everybodyInBtn = sketch.createButton("Everybody's in!").center();
+      everybodyInBtn.mousePressed(() => {
+        socket.emit('gameStart');
+        everybodyInBtn.hide();
+      });
+
+      socket.on('gameStarted', () => {
+        everybodyInBtn.hide();
+      });
     });
 
 

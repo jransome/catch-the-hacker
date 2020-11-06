@@ -44,8 +44,8 @@ voting interface
 socket idle timeout increase
 
 show class specific UI showing:
-  - player name
-  - player class
+  <!-- - player name  -->
+  <!-- - player class -->
   - see the 'office' with the services
   - see available actions?? (based on class)
 
