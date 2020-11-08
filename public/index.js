@@ -4,6 +4,7 @@ const { p5: P5 } = window;
 
 const CANVAS_HEIGHT = 600;
 const CANVAS_WIDTH = 1000;
+const N_AVATARS = 12;
 const gameContainer = document.getElementById('game');
 
 const start = () => new P5((sketch) => {
@@ -14,9 +15,12 @@ const start = () => new P5((sketch) => {
   const nameSubmitBtn = sketch.createButton('submit');
   const everybodyInBtn = sketch.createButton("Everybody's in!").hide();
 
-  let img;
+  const avatarImages = [];
+  // eslint-disable-next-line no-param-reassign
   sketch.preload = () => {
-    img = sketch.loadImage('assets/1.png');
+    for (let i = 0; i < N_AVATARS; i++) {
+      avatarImages.push(sketch.loadImage(`assets/${i}.png`));
+    }
   };
 
   // eslint-disable-next-line no-param-reassign
@@ -25,7 +29,10 @@ const start = () => new P5((sketch) => {
     sketch.textAlign(sketch.CENTER);
     sketch.background(60);
     sketch.textSize(24);
-    sketch.image(img, 100, 0);
+    const topBarColour = sketch.color(255, 204, 0);
+    sketch.fill(topBarColour);
+    sketch.noStroke();
+    sketch.rect(0, 0, CANVAS_WIDTH, 70);
 
     nameSubmitBtn.mousePressed(() => {
       console.log('submit pressed', nameInput.value());
@@ -42,8 +49,11 @@ const start = () => new P5((sketch) => {
         });
       });
 
-      socket.on('gameStarted', () => {
+      socket.on('gameStarted', (role, avatarId) => {
         everybodyInBtn.hide();
+        sketch.fill(100);
+        sketch.text(`${nameInput.value()}: ${role}`, CANVAS_WIDTH - 200, 50);
+        sketch.image(avatarImages[avatarId], CANVAS_WIDTH - 80, 10);
       });
     });
   };
