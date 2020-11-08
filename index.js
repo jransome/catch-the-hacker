@@ -28,33 +28,33 @@ class Player {
   }
 }
 
-// class Service {
-//   constructor(name) {
-//     this.name = name;
-//     this.lives = 3;
-//     this.isImmunised = false;
-//     this.players = [];
-//   }
+class Service {
+  constructor(name) {
+    this.name = name;
+    this.lives = 3;
+    this.isImmunised = false;
+    this.players = [];
+  }
 
-//   hack() {
-//     if (this.isImmunised) {
-//       console.log('attempted hack on', this.name, 'but was immunised');
+  hack() {
+    if (this.isImmunised) {
+      console.log('attempted hack on', this.name, 'but was immunised');
 
-//       this.isImmunised = false;
+      this.isImmunised = false;
 
-//       // notify assigned players of hack attempt
-//     } else {
-//       console.log(this.name, 'was hacked!!!!');
-//       this.lives -= 1;
+      // notify assigned players of hack attempt
+    } else {
+      console.log(this.name, 'was hacked!!!!');
+      this.lives -= 1;
 
-//       // check if lives depleted and something
-//     }
-//   }
+      // check if lives depleted and something
+    }
+  }
 
-//   assignPlayer(player) {
-//     this.players.push(player);
-//   }
-// }
+  assignPlayer(player) {
+    this.players.push(player);
+  }
+}
 
 class Game {
   static avatarCounter = 0;
@@ -62,6 +62,11 @@ class Game {
   constructor() {
     this.isStarted = false;
     this.players = new Set();
+    this.services = {
+      "VAS": new Service('VAS'),
+      "DPG": new Service('DPG'),
+      "EVENTSINK": new Service ('EVENTSINK')
+    }  
   }
 
   addPlayer(name, playerSocket) {
@@ -91,7 +96,10 @@ class Game {
 
     playersArray.forEach(p => p.sendMessage('gameStarted', [p.role, p.avatarId]));
     console.log('game started with players:', this.players);
+    socketServer.emit("newDay",this.services);
   }
+
+
 
   end() {
     this.isStarted = false;

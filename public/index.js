@@ -33,6 +33,8 @@ const start = () => new P5((sketch) => {
     sketch.fill(topBarColour);
     sketch.noStroke();
     sketch.rect(0, 0, CANVAS_WIDTH, 70);
+   
+
 
     nameSubmitBtn.mousePressed(() => {
       console.log('submit pressed', nameInput.value());
@@ -57,7 +59,17 @@ const start = () => new P5((sketch) => {
       });
     });
   };
-
+      socket.on("newDay",() => {
+       
+        const serviceColour = sketch.color(200, 204, 0);
+        sketch.fill(serviceColour);
+        sketch.noStroke();
+        sketch.rect(100, 200, 200, 100);
+        const textColour = sketch.color(255,255,255);
+        sketch.fill(textColour);
+        sketch.text("ofc I hardcoded. it's VAS btw",200,180);
+       
+      })
   // eslint-disable-next-line no-param-reassign
   sketch.draw = () => {
     nameInput.center();
