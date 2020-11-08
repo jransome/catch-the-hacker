@@ -1,24 +1,19 @@
-/* eslint-disable */
-
-const path = require("path");
-const express = require("express");
-const socket = require("socket.io");
-const { runInThisContext } = require("vm");
-const { listen } = require("socket.io");
+/* eslint-disable max-classes-per-file */
+const path = require('path');
+const express = require('express');
+const socket = require('socket.io');
 
 const PORT = process.env.PORT || 3000;
 const app = express();
 
-app.use(express.static(path.join(__dirname, "./public")));
+app.use(express.static(path.join(__dirname, './public')));
 
-const expressServer = app.listen(PORT, () =>
-  console.log("Server running on port", PORT)
-);
+const expressServer = app.listen(PORT, () => console.log('Server running on port', PORT));
 const socketServer = socket(expressServer);
 
-// eslint-disable
-
-const ROLES = ["DEVELOPER", "TECH_LEAD", "HACKER"];
+const ROLES = ['DEVELOPER', 'TECH_LEAD', 'HACKER'];
+const MIN_PLAYERS = 3;
+const N_HACKERS = 2;
 
 class Player {
   constructor(name, role) {
@@ -39,13 +34,13 @@ class Service {
 
   hack() {
     if (this.isImmunised) {
-      console.log("attempted hack on", this.name, "but was immunised");
+      console.log('attempted hack on', this.name, 'but was immunised');
 
       this.isImmunised = false;
 
       // notify assigned players of hack attempt
     } else {
-      console.log(this.name, "was hacked!!!!");
+      console.log(this.name, 'was hacked!!!!');
       this.lives -= 1;
 
       // check if lives depleted and something
@@ -62,14 +57,16 @@ class Game {
     this.isStarted = false;
     this.players = new Set();
   }
+
   addPlayer(name) {
     const playerInstance = new Player(
       name,
-      ROLES[Math.floor(Math.random() * 3)]
+      ROLES[Math.floor(Math.random() * 3)],
     );
     this.players.add(playerInstance);
     return playerInstance;
   }
+
   removePlayer(player) {
     this.players.delete(player);
     if (this.players.size === 0) this.end();
@@ -77,10 +74,10 @@ class Game {
 
   start() {
     this.isStarted = true;
-    console.log("game started");
-    socketServer.emit("gameStarted");
+    console.log('starting game...');
+    socketServer.emit('gameStarted');
     let chosenOnes = new Set();
-    while (chosenOnes.size < 3) {
+    while (chosenOnes.size < N_HACKERS + 1) { // + 1 for the tech lead
       chosenOnes.add(Math.floor(Math.random() * this.players.size));
     }
     chosenOnes = [...chosenOnes];
@@ -88,7 +85,7 @@ class Game {
     playersArray[chosenOnes[0]].role = ROLES[1];
     playersArray[chosenOnes[1]].role = ROLES[2];
     playersArray[chosenOnes[2]].role = ROLES[2];
-    console.log(this.players);
+    console.log('game started with players:', this.players);
   }
 
   end() {
@@ -98,23 +95,25 @@ class Game {
 
 const game = new Game();
 
-socketServer.sockets.on("connect", (newSocket) => {
-  console.log(newSocket.id, "connected");
+socketServer.sockets.on('connect', (newSocket) => {
+  console.log(newSocket.id, 'connected');
   let playerInstance = null;
 
-  newSocket.on("login", (name) => {
-    console.log("received login event from", name);
+  newSocket.on('login', (name) => {
+    console.log('received login event from', name);
     playerInstance = game.addPlayer(name);
-    // assignRole(playerInstance.role);
+    if (game.players.size >= MIN_PLAYERS) {
+      socketServer.emit('canStart');
+    }
   });
 
-  newSocket.on("gameStart", () => {
+  newSocket.on('gameStart', () => {
     if (game.isStarted) return;
     game.start();
   });
 
-  newSocket.on("disconnect", () => {
-    console.log(newSocket.id, "disconnected");
+  newSocket.on('disconnect', () => {
+    console.log(newSocket.id, playerInstance && playerInstance.name, 'disconnected');
     if (playerInstance) game.removePlayer(playerInstance);
   });
 });
