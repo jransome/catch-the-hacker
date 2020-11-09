@@ -2,6 +2,7 @@
 const path = require('path');
 const express = require('express');
 const socket = require('socket.io');
+const { shuffle } = require('./helpers');
 
 const PORT = process.env.PORT || 3000;
 const app = express();
@@ -14,6 +15,7 @@ const socketServer = socket(expressServer);
 const ROLES = ['DEVELOPER', 'TECH_LEAD', 'HACKER'];
 const MIN_PLAYERS = 3;
 const N_HACKERS = 2;
+
 
 class Player {
   constructor(name, playerSocket, avatarId) {
@@ -33,7 +35,7 @@ class Service {
     this.name = name;
     this.lives = 3;
     this.isImmunised = false;
-    this.players = [];
+    this.workers = [];
   }
 
   // hack() {
@@ -51,9 +53,16 @@ class Service {
   //   }
   // }
 
-  // assignPlayer(player) {
-  //   this.players.push(player);
-  // }
+  clearWorkers() {
+    this.workers.length = 0;
+  }
+
+  assignWorker(player) {
+    this.workers.push({
+      name: player.name,
+      avatarId: player.avatarId,
+    });
+  }
 }
 
 class Game {
@@ -66,7 +75,8 @@ class Game {
     this.services = [
       new Service('VAS'),
       new Service('DPG'),
-      new Service('EVENTSINK')
+      new Service('EVENTSINK'),
+      new Service('yourFace'),
     ];
   }
 
@@ -108,6 +118,20 @@ class Game {
   newDay() {
     this.dayCounter++;
     console.log('day', this.dayCounter, 'started');
+
+    const shuffledPlayers = shuffle(this.players);
+    console.log(shuffledPlayers.map(p => p.name))
+    const maxPlayersPerService = 3;
+    this.services.forEach((s, serviceIndex) => {
+      s.clearWorkers();
+      for (let i = 0; i < maxPlayersPerService; i++) {
+        const player = shuffledPlayers[serviceIndex * maxPlayersPerService + i];
+        if (!player) return;
+        console.log('assigning', player.name, 'to', s.name);
+        s.assignWorker(player);
+      }
+    });
+
     socketServer.emit('newDay', this.services);
 
   }
