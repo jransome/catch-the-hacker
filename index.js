@@ -61,12 +61,13 @@ class Game {
 
   constructor() {
     this.isStarted = false;
+    this.dayCounter = 0;
     this.players = new Set();
     this.services = {
       "VAS": new Service('VAS'),
       "DPG": new Service('DPG'),
-      "EVENTSINK": new Service ('EVENTSINK')
-    }  
+      "EVENTSINK": new Service('EVENTSINK')
+    }
   }
 
   addPlayer(name, playerSocket) {
@@ -95,15 +96,20 @@ class Game {
     playersArray[chosenOnes[2]].role = ROLES[2];
 
     playersArray.forEach(p => p.sendMessage('gameStarted', [p.role, p.avatarId]));
-    console.log('game started with players:', this.players);
-    socketServer.emit("newDay",this.services);
+    console.log('game started with players:', playersArray.map(p => p.name));
+    this.newDay();
   }
-
-
 
   end() {
     this.isStarted = false;
     Game.avatarCounter = 0;
+  }
+
+  newDay() {
+    this.dayCounter++;
+    console.log('day', this.dayCounter, 'started');
+    socketServer.emit('newDay', this.services);
+
   }
 }
 
