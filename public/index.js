@@ -18,6 +18,7 @@ const gameContainer = document.getElementById('game');
 
 const gameState = {
   services: [],
+  // player: {},
 };
 window.gameState = gameState; // for debugging
 
@@ -70,7 +71,33 @@ const start = () => new P5((sketch) => {
   const nameSubmitBtn = sketch.createButton('submit');
   const everybodyInBtn = sketch.createButton("Everybody's in!").hide();
   const avatarImages = [];
- 
+
+  const onNameSubmitPressed = () => {
+    console.log('submit pressed', nameInput.value());
+    if (!nameInput.value()) return;
+    socket.emit('login', nameInput.value());
+    nameInput.hide();
+    nameSubmitBtn.hide();
+    const waitingText = sketch.createP('Waiting for other players...').center();
+
+    socket.on('canStart', () => {
+      waitingText.hide();
+      everybodyInBtn.show();
+      everybodyInBtn.mousePressed(() => {
+        socket.emit('gameStart');
+        everybodyInBtn.hide();
+      });
+    });
+
+    socket.on('gameStarted', (role, avatarId) => {
+      waitingText.hide();
+      everybodyInBtn.hide();
+      sketch.fill(100);
+      sketch.text(`${nameInput.value()}: ${role}`, CANVAS_WIDTH - 200, 50);
+      sketch.image(avatarImages[avatarId], CANVAS_WIDTH - 80, 10);
+    });
+  };
+
   // eslint-disable-next-line no-param-reassign
   sketch.preload = () => {
     for (let i = 0; i < N_AVATARS; i++) {
@@ -88,28 +115,7 @@ const start = () => new P5((sketch) => {
     sketch.noStroke();
     sketch.rect(0, 0, CANVAS_WIDTH, 70);
 
-    nameSubmitBtn.mousePressed(() => {
-      console.log('submit pressed', nameInput.value());
-      if (!nameInput.value()) return;
-      socket.emit('login', nameInput.value());
-      nameInput.hide();
-      nameSubmitBtn.hide();
-
-      socket.on('canStart', () => {
-        everybodyInBtn.show();
-        everybodyInBtn.mousePressed(() => {
-          socket.emit('gameStart');
-          everybodyInBtn.hide();
-        });
-      });
-
-      socket.on('gameStarted', (role, avatarId) => {
-        everybodyInBtn.hide();
-        sketch.fill(100);
-        sketch.text(`${nameInput.value()}: ${role}`, CANVAS_WIDTH - 200, 50);
-        sketch.image(avatarImages[avatarId], CANVAS_WIDTH - 80, 10);
-      });
-    });
+    nameSubmitBtn.mousePressed(onNameSubmitPressed);
   };
 
   // eslint-disable-next-line no-param-reassign
@@ -125,6 +131,12 @@ const start = () => new P5((sketch) => {
   sketch.mouseReleased = () => {
     gameState.services.forEach(s => s.checkClicked(sketch.mouseX, sketch.mouseY));
   };
+
+  // AUTO TEST - TO BE DELETED
+  setTimeout(() => {
+    nameInput.value(Date.now());
+    onNameSubmitPressed();
+  }, 500);
 }, gameContainer);
 
 start();

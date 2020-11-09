@@ -62,7 +62,7 @@ class Game {
   constructor() {
     this.isStarted = false;
     this.dayCounter = 0;
-    this.players = new Set();
+    this.players = [];
     this.services = [
       new Service('VAS'),
       new Service('DPG'),
@@ -72,13 +72,14 @@ class Game {
 
   addPlayer(name, playerSocket) {
     const playerInstance = new Player(name, playerSocket, Game.avatarCounter++);
-    this.players.add(playerInstance);
+    this.players.push(playerInstance);
     return playerInstance;
   }
 
   removePlayer(player) {
-    this.players.delete(player);
-    if (this.players.size === 0) this.end();
+    const i = this.players.indexOf(player);
+    if (i !== -1) this.players.splice(i, 1);
+    if (this.players.length === 0) this.end();
   }
 
   start() {
@@ -86,17 +87,16 @@ class Game {
     console.log('starting game...');
     let chosenOnes = new Set();
     while (chosenOnes.size < N_HACKERS + 1) { // + 1 for the tech lead
-      chosenOnes.add(Math.floor(Math.random() * this.players.size));
+      chosenOnes.add(Math.floor(Math.random() * this.players.length));
     }
     chosenOnes = [...chosenOnes];
-    const playersArray = [...this.players];
-    playersArray.forEach(p => p.role = ROLES[0]);
-    playersArray[chosenOnes[0]].role = ROLES[1];
-    playersArray[chosenOnes[1]].role = ROLES[2];
-    playersArray[chosenOnes[2]].role = ROLES[2];
+    this.players.forEach(p => p.role = ROLES[0]);
+    this.players[chosenOnes[0]].role = ROLES[1];
+    this.players[chosenOnes[1]].role = ROLES[2];
+    this.players[chosenOnes[2]].role = ROLES[2];
 
-    playersArray.forEach(p => p.sendMessage('gameStarted', [p.role, p.avatarId]));
-    console.log('game started with players:', playersArray.map(p => p.name));
+    this.players.forEach(p => p.sendMessage('gameStarted', [p.role, p.avatarId]));
+    console.log('game started with players:', this.players.map(p => p.name));
     this.newDay();
   }
 
@@ -122,7 +122,7 @@ socketServer.sockets.on('connect', (newSocket) => {
   newSocket.on('login', (name) => {
     console.log('received login event from', name);
     playerInstance = game.addPlayer(name, newSocket);
-    if (game.players.size >= MIN_PLAYERS) {
+    if (game.players.length >= MIN_PLAYERS) {
       socketServer.emit('canStart');
     }
   });
