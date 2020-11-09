@@ -36,24 +36,24 @@ class Service {
     this.players = [];
   }
 
-  hack() {
-    if (this.isImmunised) {
-      console.log('attempted hack on', this.name, 'but was immunised');
+  // hack() {
+  //   if (this.isImmunised) {
+  //     console.log('attempted hack on', this.name, 'but was immunised');
 
-      this.isImmunised = false;
+  //     this.isImmunised = false;
 
-      // notify assigned players of hack attempt
-    } else {
-      console.log(this.name, 'was hacked!!!!');
-      this.lives -= 1;
+  //     // notify assigned players of hack attempt
+  //   } else {
+  //     console.log(this.name, 'was hacked!!!!');
+  //     this.lives -= 1;
 
-      // check if lives depleted and something
-    }
-  }
+  //     // check if lives depleted and something
+  //   }
+  // }
 
-  assignPlayer(player) {
-    this.players.push(player);
-  }
+  // assignPlayer(player) {
+  //   this.players.push(player);
+  // }
 }
 
 class Game {
@@ -63,11 +63,11 @@ class Game {
     this.isStarted = false;
     this.dayCounter = 0;
     this.players = new Set();
-    this.services = {
-      "VAS": new Service('VAS'),
-      "DPG": new Service('DPG'),
-      "EVENTSINK": new Service('EVENTSINK')
-    }
+    this.services = [
+      new Service('VAS'),
+      new Service('DPG'),
+      new Service('EVENTSINK')
+    ];
   }
 
   addPlayer(name, playerSocket) {

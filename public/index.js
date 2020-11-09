@@ -16,38 +16,61 @@ const SERVICE_SIZE = [150, 100];
 
 const gameContainer = document.getElementById('game');
 
+const gameState = {
+  services: [],
+};
+window.gameState = gameState; // for debugging
+
+socket.on('newDay', (services) => {
+  gameState.services = services;
+});
+
+const renderService = (sketch, service, index) => {
+  const colNumber = index % MAX_ROW_LENGTH;
+  const rowNumber = Math.floor(index / MAX_ROW_LENGTH);
+
+  const position = [
+    LEFT_MARGIN + colNumber * COLUMN_SPACING,
+    TOP_MARGIN + rowNumber * ROW_SPACING,
+  ];
+
+  sketch.noStroke();
+
+  const serviceColour = sketch.color(0, 204, 0);
+  sketch.fill(serviceColour);
+  sketch.rectMode(sketch.CENTER);
+  sketch.rect(...position, ...SERVICE_SIZE);
+
+  const textColour = sketch.color(255, 255, 255);
+  sketch.fill(textColour);
+  sketch.textSize(24);
+  sketch.text(service.name, ...position);
+
+  const checkClicked = (mouseX, mouseY) => {
+    const wasClicked = (
+      mouseX > position[0] - SERVICE_SIZE[0] / 2
+      && mouseX < position[0] + SERVICE_SIZE[0] / 2
+      && mouseY > position[1] - SERVICE_SIZE[1] / 2
+      && mouseY < position[1] + SERVICE_SIZE[1] / 2
+    );
+
+    if (!wasClicked) return;
+
+    console.log(service.name, 'was clicked!');
+  };
+
+  return {
+    ...service,
+    checkClicked,
+  };
+};
+
 const start = () => new P5((sketch) => {
   const nameInput = sketch.createInput().attribute('placeholder', 'Enter your name');
   const nameSubmitBtn = sketch.createButton('submit');
   const everybodyInBtn = sketch.createButton("Everybody's in!").hide();
   const avatarImages = [];
-
-  const drawService = (name, index) => {
-    const colNumber = index % MAX_ROW_LENGTH;
-    const rowNumber = Math.floor(index / MAX_ROW_LENGTH);
-
-    const position = [
-      LEFT_MARGIN + colNumber * COLUMN_SPACING,
-      TOP_MARGIN + rowNumber * ROW_SPACING,
-    ];
-
-    sketch.noStroke();
-
-    const serviceColour = sketch.color(0, 204, 0);
-    sketch.fill(serviceColour);
-    sketch.rectMode(sketch.CENTER);
-    sketch.rect(...position, ...SERVICE_SIZE);
-
-    const textColour = sketch.color(255, 255, 255);
-    sketch.fill(textColour);
-    sketch.textAlign(sketch.CENTER, sketch.CENTER);
-    sketch.text(name, ...position);
-  }
-
-  socket.on('newDay', (services) => {
-
-  });
-
+ 
   // eslint-disable-next-line no-param-reassign
   sketch.preload = () => {
     for (let i = 0; i < N_AVATARS; i++) {
@@ -58,9 +81,8 @@ const start = () => new P5((sketch) => {
   // eslint-disable-next-line no-param-reassign
   sketch.setup = () => {
     sketch.createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
-    sketch.textAlign(sketch.CENTER);
+    sketch.textAlign(sketch.CENTER, sketch.CENTER);
     sketch.background(60);
-    sketch.textSize(24);
     const topBarColour = sketch.color(255, 204, 0);
     sketch.fill(topBarColour);
     sketch.noStroke();
@@ -88,13 +110,6 @@ const start = () => new P5((sketch) => {
         sketch.image(avatarImages[avatarId], CANVAS_WIDTH - 80, 10);
       });
     });
-
-    drawService('vas', 0);
-    drawService('dpg', 1);
-    drawService('event-sink', 2);
-    drawService('bills-checker', 3);
-    drawService('your-face', 4);
-
   };
 
   // eslint-disable-next-line no-param-reassign
@@ -103,10 +118,12 @@ const start = () => new P5((sketch) => {
     everybodyInBtn.center();
     nameSubmitBtn.position(nameInput.x + nameInput.width + 10, nameInput.y);
 
-    // drawService('vas', 0);
-    // drawService('dpg', 1);
-    // drawService('event-sink', 3);
+    gameState.services = gameState.services.map((s, i) => renderService(sketch, s, i));
+  };
 
+  // eslint-disable-next-line no-param-reassign
+  sketch.mouseReleased = () => {
+    gameState.services.forEach(s => s.checkClicked(sketch.mouseX, sketch.mouseY));
   };
 }, gameContainer);
 
