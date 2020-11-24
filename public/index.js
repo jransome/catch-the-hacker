@@ -22,6 +22,7 @@ const gameState = {
   player: {},
 };
 window.gameState = gameState; // for debugging
+window.socket = socket;
 
 socket.on("newDay", (services) => {
   gameState.services = services;
@@ -58,13 +59,24 @@ const renderService = (sketch, service, index) => {
   service.workers.forEach((w, i) => {
     renderPlayer(sketch, w, position[0] + (i - 1) * 80, position[1] + 70);
   });
-  if (!service.hackBtn) {
+
+  if (
+    !service.hackBtn &&
+    gameState.player.role === "HACKER" &&
+    service.workers.find((w) => w.name === gameState.player.name)
+  ) {
     service.hackBtn = sketch.createButton("hack");
+    service.hackBtn.mousePressed(() => {
+      service.hackBtn.hide();
+      socket.emit("hacked", service.name);
+    });
   }
-  service.hackBtn.position(
-    sketch.canvas.offsetLeft + position[0],
-    sketch.canvas.offsetTop + position[1]
-  );
+
+  service.hackBtn &&
+    service.hackBtn.position(
+      sketch.canvas.offsetLeft + position[0],
+      sketch.canvas.offsetTop + position[1]
+    );
 
   return service;
 };
@@ -150,15 +162,15 @@ const start = () =>
     };
 
     // eslint-disable-next-line no-param-reassign
-    sketch.mouseReleased = () => {
-      gameState.services.forEach((s) =>
-        s.checkClicked(sketch.mouseX, sketch.mouseY)
-      );
-    };
+    // sketch.mouseReleased = () => {
+    //   gameState.services.forEach((s) =>
+    //     s.checkClicked(sketch.mouseX, sketch.mouseY)
+    //   );
+    // };
 
     // AUTO TEST - TO BE DELETED
     setTimeout(() => {
-      const name = ["boris", "trump", "lala", "blahla"][
+      const name = ["boris", "trump", "lala", "blahla","sdsd","sdsdfgggg"][
         Math.floor(Math.random() * 5)
       ];
       nameInput.value(name);

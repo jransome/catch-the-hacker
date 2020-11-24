@@ -1,21 +1,22 @@
 /* eslint-disable max-classes-per-file */
-const path = require('path');
-const express = require('express');
-const socket = require('socket.io');
-const { shuffle } = require('./helpers');
+const path = require("path");
+const express = require("express");
+const socket = require("socket.io");
+const { shuffle } = require("./helpers");
 
 const PORT = process.env.PORT || 3000;
 const app = express();
 
-app.use(express.static(path.join(__dirname, './public')));
+app.use(express.static(path.join(__dirname, "./public")));
 
-const expressServer = app.listen(PORT, () => console.log('Server running on port', PORT));
+const expressServer = app.listen(PORT, () =>
+  console.log("Server running on port", PORT)
+);
 const socketServer = socket(expressServer);
 
-const ROLES = ['DEVELOPER', 'TECH_LEAD', 'HACKER'];
+const ROLES = ["DEVELOPER", "TECH_LEAD", "HACKER"];
 const MIN_PLAYERS = 3;
 const N_HACKERS = 2;
-
 
 class Player {
   constructor(name, playerSocket, avatarId) {
@@ -73,16 +74,20 @@ class Game {
     this.dayCounter = 0;
     this.players = [];
     this.services = [
-      new Service('VAS'),
-      new Service('DPG'),
-      new Service('EVENTSINK'),
-      new Service('yourFace'),
+      new Service("VAS"),
+      new Service("DPG"),
+      new Service("EVENTSINK"),
+      new Service("yourFace"),
     ];
   }
 
   addPlayer(name, playerSocket) {
     const playerInstance = new Player(name, playerSocket, Game.avatarCounter++);
     this.players.push(playerInstance);
+
+    playerSocket.on("hacked", (serviceName) => {
+      console.log(serviceName, "was hacked")
+    });
     return playerInstance;
   }
 
@@ -94,19 +99,25 @@ class Game {
 
   start() {
     this.isStarted = true;
-    console.log('starting game...');
+    console.log("starting game...");
     let chosenOnes = new Set();
-    while (chosenOnes.size < N_HACKERS + 1) { // + 1 for the tech lead
+    while (chosenOnes.size < N_HACKERS + 1) {
+      // + 1 for the tech lead
       chosenOnes.add(Math.floor(Math.random() * this.players.length));
     }
     chosenOnes = [...chosenOnes];
-    this.players.forEach(p => p.role = ROLES[0]);
+    this.players.forEach((p) => (p.role = ROLES[0]));
     this.players[chosenOnes[0]].role = ROLES[1];
     this.players[chosenOnes[1]].role = ROLES[2];
     this.players[chosenOnes[2]].role = ROLES[2];
 
-    this.players.forEach(p => p.sendMessage('gameStarted', [p.role, p.avatarId]));
-    console.log('game started with players:', this.players.map(p => p.name));
+    this.players.forEach((p) =>
+      p.sendMessage("gameStarted", [p.role, p.avatarId])
+    );
+    console.log(
+      "game started with players:",
+      this.players.map((p) => p.name)
+    );
     this.newDay();
   }
 
@@ -117,47 +128,53 @@ class Game {
 
   newDay() {
     this.dayCounter++;
-    console.log('day', this.dayCounter, 'started');
+    console.log("day", this.dayCounter, "started");
 
     const shuffledPlayers = shuffle(this.players);
-    console.log(shuffledPlayers.map(p => p.name))
+    console.log(shuffledPlayers.map((p) => p.name));
     const maxPlayersPerService = 3;
     this.services.forEach((s, serviceIndex) => {
       s.clearWorkers();
       for (let i = 0; i < maxPlayersPerService; i++) {
         const player = shuffledPlayers[serviceIndex * maxPlayersPerService + i];
         if (!player) return;
-        console.log('assigning', player.name, 'to', s.name);
+        console.log("assigning", player.name, "to", s.name);
         s.assignWorker(player);
       }
     });
 
-    socketServer.emit('newDay', this.services);
-
+    socketServer.emit("newDay", this.services);
+    // socketServer.sockets.on('hacked', (serviceName) => {
+    // console.log(serviceName, "was hacked");
+    // })
   }
 }
 
 const game = new Game();
 
-socketServer.sockets.on('connect', (newSocket) => {
-  console.log(newSocket.id, 'connected');
+socketServer.sockets.on("connect", (newSocket) => {
+  console.log(newSocket.id, "connected");
   let playerInstance = null;
 
-  newSocket.on('login', (name) => {
-    console.log('received login event from', name);
+  newSocket.on("login", (name) => {
+    console.log("received login event from", name);
     playerInstance = game.addPlayer(name, newSocket);
     if (game.players.length >= MIN_PLAYERS) {
-      socketServer.emit('canStart');
+      socketServer.emit("canStart");
     }
   });
 
-  newSocket.on('gameStart', () => {
+  newSocket.on("gameStart", () => {
     if (game.isStarted) return;
     game.start();
   });
 
-  newSocket.on('disconnect', () => {
-    console.log(newSocket.id, playerInstance && playerInstance.name, 'disconnected');
+  newSocket.on("disconnect", () => {
+    console.log(
+      newSocket.id,
+      playerInstance && playerInstance.name,
+      "disconnected"
+    );
     if (playerInstance) game.removePlayer(playerInstance);
   });
 });
