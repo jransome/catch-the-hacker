@@ -17,12 +17,14 @@ Tech lead???? (v2)
 
 Night
 - hackers collude and decide whether to act. if they hack an unimmunised service, the service loses 33% health
-- tech lead immunises a service. if that service is hacked, the hack fails and the service is not affected
+- tech lead can immunise a service. if that service is hacked, the hack fails and the service is not affected
 
-Morning
+Daytime
 - everyone gets a pagerduty alert if a service is broken (the service that the hacker broke)
 - people discuss who they think the hacker is
 - vote on who gets fired
+- people choose which service to work on (random for now)
+- then it's nighttime
 
 
 Game ends when a service is hacked 3 times (hackers win) or the hackers are fired (CtM wins).

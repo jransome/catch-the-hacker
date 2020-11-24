@@ -37,22 +37,23 @@ class Service {
     this.lives = 3;
     this.isImmunised = false;
     this.workers = [];
+    this.hackedLastNight = false;
   }
 
-  // hack() {
-  //   if (this.isImmunised) {
-  //     console.log('attempted hack on', this.name, 'but was immunised');
+  hack() {
+    if (this.isImmunised) {
+      console.log('attempted hack on', this.name, 'but was immunised');
+      this.isImmunised = false;
 
-  //     this.isImmunised = false;
+      // notify assigned players of hack attempt
+    } else {
+      console.log(this.name, 'was hacked!!!!');
+      this.hackedLastNight = true;
+      this.lives -= 1;
 
-  //     // notify assigned players of hack attempt
-  //   } else {
-  //     console.log(this.name, 'was hacked!!!!');
-  //     this.lives -= 1;
-
-  //     // check if lives depleted and something
-  //   }
-  // }
+      // if lives === 0, then hackers have won the game
+    }
+  }
 
   clearWorkers() {
     this.workers.length = 0;
@@ -85,9 +86,8 @@ class Game {
     const playerInstance = new Player(name, playerSocket, Game.avatarCounter++);
     this.players.push(playerInstance);
 
-    playerSocket.on("hacked", (serviceName) => {
-      console.log(serviceName, "was hacked")
-    });
+    playerSocket.on('hacked', this._onServiceHacked.bind(this));
+
     return playerInstance;
   }
 
@@ -118,7 +118,9 @@ class Game {
       "game started with players:",
       this.players.map((p) => p.name)
     );
-    this.newDay();
+
+    this._shuffleWorkers();
+    this._nightfall();
   }
 
   end() {
@@ -126,12 +128,24 @@ class Game {
     Game.avatarCounter = 0;
   }
 
-  newDay() {
+  _sunrise() {
     this.dayCounter++;
-    console.log("day", this.dayCounter, "started");
+    console.log("day", this.dayCounter, "started...");
 
+    // 1. alert everyone (if service hacked) people need to stay wheree they were during the night so discussion can happen
+    socketServer.emit('sunrise', this.services);
+
+    // 2. discussion and voting and firing
+
+
+    // 3. reassigning of people to services
+    this._shuffleWorkers()
+  }
+
+  _shuffleWorkers() {
+    console.log('shuffling workers...')
     const shuffledPlayers = shuffle(this.players);
-    console.log(shuffledPlayers.map((p) => p.name));
+
     const maxPlayersPerService = 3;
     this.services.forEach((s, serviceIndex) => {
       s.clearWorkers();
@@ -142,11 +156,28 @@ class Game {
         s.assignWorker(player);
       }
     });
+    console.log('workers shuffled')
 
-    socketServer.emit("newDay", this.services);
-    // socketServer.sockets.on('hacked', (serviceName) => {
-    // console.log(serviceName, "was hacked");
-    // })
+    socketServer.emit('reshuffle', this.services);
+  }
+
+  _nightfall() {
+    console.log('nightfall started...')
+
+    // allow hacks to happen
+    // allow immunisation to happen
+    socketServer.emit('nightfall', this.services);
+
+    // set 1 minute timer till sunrise
+    setTimeout(() => {
+      console.log('nightfall ended')
+      this._sunrise();
+    }, 10000);
+  }
+
+  _onServiceHacked(serviceName) {
+    const hackedService = this.services.find(s => s.name === serviceName)
+    hackedService && hackedService.hack()
   }
 }
 
