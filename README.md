@@ -46,7 +46,13 @@ socket idle timeout increase
 show class specific UI showing:
   <!-- - player name  -->
   <!-- - player class -->
-  - see the 'office' with the services
+  <!-- - fix role display -->
+  <!-- - see the 'office' with the services -->
+  <!-- - display services -->
+  -if you are a hacker, you should be able to see the button on the service your're in
+  -if you are a hacker you are able to see other hackers (red border or smth)
+  
+  
   - see available actions?? (based on class)
 
 night/day cycle

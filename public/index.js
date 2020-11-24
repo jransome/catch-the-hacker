@@ -1,4 +1,4 @@
-import socket from './socket.js';
+import socket from "./socket.js";
 
 const { p5: P5 } = window;
 
@@ -14,7 +14,7 @@ const TOP_MARGIN = 150;
 const LEFT_MARGIN = 180;
 const SERVICE_SIZE = [250, 50];
 
-const gameContainer = document.getElementById('game');
+const gameContainer = document.getElementById("game");
 const avatarImages = [];
 
 const gameState = {
@@ -23,7 +23,7 @@ const gameState = {
 };
 window.gameState = gameState; // for debugging
 
-socket.on('newDay', (services) => {
+socket.on("newDay", (services) => {
   gameState.services = services;
 });
 
@@ -56,118 +56,115 @@ const renderService = (sketch, service, index) => {
   sketch.text(service.name, ...position);
 
   service.workers.forEach((w, i) => {
-    renderPlayer(sketch, w, position[0] + ((i - 1) * 80), position[1] + 70);
+    renderPlayer(sketch, w, position[0] + (i - 1) * 80, position[1] + 70);
   });
+  if (!service.hackBtn) {
+    service.hackBtn = sketch.createButton("hack");
+  }
+  service.hackBtn.position(
+    sketch.canvas.offsetLeft + position[0],
+    sketch.canvas.offsetTop + position[1]
+  );
 
-  const checkClicked = (mouseX, mouseY) => {
-    const wasClicked = (
-      mouseX > position[0] - SERVICE_SIZE[0] / 2
-      && mouseX < position[0] + SERVICE_SIZE[0] / 2
-      && mouseY > position[1] - SERVICE_SIZE[1] / 2
-      && mouseY < position[1] + SERVICE_SIZE[1] / 2
-    );
-
-    if (!wasClicked) return;
-
-    console.log(service.name, 'was clicked!');
-  };
-
-  return {
-    ...service,
-    checkClicked,
-  };
+  return service;
 };
 
-const start = () => new P5((sketch) => {
-  const nameInput = sketch.createInput().attribute('placeholder', 'Enter your name');
-  const nameSubmitBtn = sketch.createButton('submit');
-  const everybodyInBtn = sketch.createButton("Everybody's in!").hide();
+const start = () =>
+  new P5((sketch) => {
+    const nameInput = sketch
+      .createInput()
+      .attribute("placeholder", "Enter your name");
+    const nameSubmitBtn = sketch.createButton("submit");
+    const everybodyInBtn = sketch.createButton("Everybody's in!").hide();
 
-  const onNameSubmitPressed = () => {
-    console.log('submit pressed', nameInput.value());
-    if (!nameInput.value()) return;
-    socket.emit('login', nameInput.value());
-    nameInput.hide();
-    nameSubmitBtn.hide();
-    const waitingText = sketch.createP('Waiting for other players...').center();
+    const onNameSubmitPressed = () => {
+      console.log("submit pressed", nameInput.value());
+      if (!nameInput.value()) return;
+      socket.emit("login", nameInput.value());
+      nameInput.hide();
+      nameSubmitBtn.hide();
+      const waitingText = sketch
+        .createP("Waiting for other players...")
+        .center();
 
-    socket.on('canStart', () => {
-      waitingText.hide();
-      everybodyInBtn.show();
-      everybodyInBtn.mousePressed(() => {
-        socket.emit('gameStart');
-        everybodyInBtn.hide();
+      socket.on("canStart", () => {
+        waitingText.hide();
+        everybodyInBtn.show();
+        everybodyInBtn.mousePressed(() => {
+          socket.emit("gameStart");
+          everybodyInBtn.hide();
+        });
       });
-    });
 
-    socket.on('gameStarted', (role, avatarId) => {
-      waitingText.hide();
-      everybodyInBtn.hide();
-      gameState.player = { name: nameInput.value(), role, avatarId };
-    });
-  };
+      socket.on("gameStarted", (role, avatarId) => {
+        waitingText.hide();
+        everybodyInBtn.hide();
+        gameState.player = { name: nameInput.value(), role, avatarId };
+      });
+    };
 
-  // eslint-disable-next-line no-param-reassign
-  sketch.preload = () => {
-    for (let i = 0; i < N_AVATARS; i++) {
-      avatarImages.push(sketch.loadImage(`assets/${i}.png`));
-    }
-  };
+    // eslint-disable-next-line no-param-reassign
+    sketch.preload = () => {
+      for (let i = 0; i < N_AVATARS; i++) {
+        avatarImages.push(sketch.loadImage(`assets/${i}.png`));
+      }
+    };
 
-  // eslint-disable-next-line no-param-reassign
-  sketch.setup = () => {
-    sketch.createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
-    sketch.rectMode(sketch.CENTER);
-    sketch.imageMode(sketch.CENTER);
-    sketch.textAlign(sketch.CENTER, sketch.CENTER);
-    nameSubmitBtn.mousePressed(onNameSubmitPressed);
-  };
+    // eslint-disable-next-line no-param-reassign
+    sketch.setup = () => {
+      sketch.createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
+      sketch.rectMode(sketch.CENTER);
+      sketch.imageMode(sketch.CENTER);
+      sketch.textAlign(sketch.CENTER, sketch.CENTER);
+      nameSubmitBtn.mousePressed(onNameSubmitPressed);
+    };
 
-  // eslint-disable-next-line no-param-reassign
-  sketch.draw = () => {
-    sketch.background(60);
+    // eslint-disable-next-line no-param-reassign
+    sketch.draw = () => {
+      sketch.background(60);
 
-    // top bar
-    const topBarColour = sketch.color(255, 204, 0);
-    sketch.fill(topBarColour);
-    sketch.noStroke();
-    sketch.rect(CANVAS_WIDTH / 2, 35, CANVAS_WIDTH, 100);
+      // top bar
+      const topBarColour = sketch.color(255, 204, 0);
+      sketch.fill(topBarColour);
+      sketch.noStroke();
+      sketch.rect(CANVAS_WIDTH / 2, 35, CANVAS_WIDTH, 100);
 
-    // player info
-    const { name, role, avatarId } = gameState.player;
-    if (name) {
-      sketch.fill(100);
-      sketch.textSize(20);
-      sketch.text(`${name}: ${role}`, CANVAS_WIDTH - 200, 45);
-      sketch.image(avatarImages[avatarId], CANVAS_WIDTH - 60, 45);
-    }
+      // player info
+      const { name, role, avatarId } = gameState.player;
+      if (name) {
+        sketch.fill(100);
+        sketch.textSize(20);
+        sketch.text(`${name}: ${role}`, CANVAS_WIDTH - 200, 45);
+        sketch.image(avatarImages[avatarId], CANVAS_WIDTH - 60, 45);
+      }
 
-    // keep stuff centred
-    nameInput.center();
-    everybodyInBtn.center();
-    nameSubmitBtn.position(nameInput.x + nameInput.width + 10, nameInput.y);
+      // keep stuff centred
+      nameInput.center();
+      everybodyInBtn.center();
+      nameSubmitBtn.position(nameInput.x + nameInput.width + 10, nameInput.y);
 
-    // draw services
-    gameState.services = gameState.services.map((s, i) => renderService(sketch, s, i));
-  };
+      // draw services
+      gameState.services = gameState.services.map((s, i) =>
+        renderService(sketch, s, i)
+      );
+    };
 
-  // eslint-disable-next-line no-param-reassign
-  sketch.mouseReleased = () => {
-    gameState.services.forEach(s => s.checkClicked(sketch.mouseX, sketch.mouseY));
-  };
+    // eslint-disable-next-line no-param-reassign
+    sketch.mouseReleased = () => {
+      gameState.services.forEach((s) =>
+        s.checkClicked(sketch.mouseX, sketch.mouseY)
+      );
+    };
 
-  // AUTO TEST - TO BE DELETED
-  setTimeout(() => {
-    const name = [
-      'boris',
-      'trump',
-      'lala',
-      'blahla',
-    ][Math.floor(Math.random() * 5)];
-    nameInput.value(name);
-    onNameSubmitPressed();
-  }, 500);
-}, gameContainer);
+    // AUTO TEST - TO BE DELETED
+    setTimeout(() => {
+      const name = ["boris", "trump", "lala", "blahla"][
+        Math.floor(Math.random() * 5)
+      ];
+      nameInput.value(name);
+      onNameSubmitPressed();
+    }, 500);
+  }, gameContainer);
 
 start();
 
