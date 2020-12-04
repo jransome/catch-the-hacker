@@ -4,6 +4,8 @@ const express = require("express");
 const socket = require("socket.io");
 const { shuffle } = require("./helpers");
 
+const NIGHT_LENGTH = 10000;
+
 const PORT = process.env.PORT || 3000;
 const app = express();
 
@@ -172,7 +174,7 @@ class Game {
     setTimeout(() => {
       console.log('nightfall ended')
       this._sunrise();
-    }, 10000);
+    }, NIGHT_LENGTH);
   }
 
   _onServiceHacked(serviceName) {

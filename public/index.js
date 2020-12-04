@@ -2,6 +2,8 @@ import socket from './socket.js';
 
 const { p5: P5 } = window;
 
+const NIGHT_LENGTH = 10000;
+
 const CANVAS_HEIGHT = 600;
 const CANVAS_WIDTH = 1000;
 const N_AVATARS = 12;
@@ -19,6 +21,7 @@ const avatarImages = [];
 
 const gameState = {
   services: [],
+  servicesHackUi: {},
   player: {},
   isNighttime: true,
 };
@@ -38,7 +41,7 @@ socket.on('reshuffle', (services) => {
 socket.on('nightfall', (services) => {
   gameState.services = services;
   gameState.isNighttime = true;
-  gameState.sunriseTime = Date.now() + 10000;
+  gameState.sunriseTime = Date.now() + NIGHT_LENGTH;
 });
 
 const renderPlayer = (sketch, { name, avatarId }, xPos, yPos) => {
@@ -80,26 +83,28 @@ const renderService = (sketch, service, index) => {
     renderPlayer(sketch, w, position[0] + (i - 1) * 80, position[1] + 70);
   });
 
+  const hackBtn = gameState.servicesHackUi[service.name];
   if (
     gameState.isNighttime
-    && !service.hackBtn
+    && !hackBtn
     && gameState.player.role === 'HACKER'
     && service.workers.find(w => w.name === gameState.player.name)
   ) {
-    service.hackBtn = sketch.createButton('hack');
-    service.hackBtn.mousePressed(() => {
-      service.hackBtn.hide();
+    gameState.servicesHackUi[service.name] = sketch.createButton('hack');
+    gameState.servicesHackUi[service.name].mousePressed(() => {
+      gameState.servicesHackUi[service.name].hide();
       socket.emit('hacked', service.name);
     });
-  } else {
-    service.hackBtn && service.hackBtn.hide();
+  } else if (!gameState.isNighttime && hackBtn) {
+    hackBtn.hide();
   }
 
-  service.hackBtn
-    && service.hackBtn.position(
+  if (hackBtn) {
+    hackBtn.position(
       sketch.canvas.offsetLeft + position[0],
       sketch.canvas.offsetTop + position[1],
     );
+  }
 
   return service;
 };
@@ -200,10 +205,10 @@ const start = () => new P5((sketch) => {
 
   // AUTO TEST - TO BE DELETED
   setTimeout(() => {
-    const name = ['boris', 'trump', 'lala', 'blahla', 'sdsd', 'sdsdfgggg'][
-      Math.floor(Math.random() * 5)
+    const name = ['boris', 'trump', 'lala', 'blahla', 'a', 'b', 'c', 'haha', 'dog'][
+      Math.floor(Math.random() * 9)
     ];
-    nameInput.value(name);
+    nameInput.value(name + Date.now().toString().slice(-4));
     onNameSubmitPressed();
   }, 500);
 }, gameContainer);
