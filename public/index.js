@@ -20,8 +20,9 @@ const gameContainer = document.getElementById('game');
 const avatarImages = [];
 
 const gameState = {
-  services: [],
   hackBtns: {},
+  fireBtns: {},
+  services: [],
   players: [],
   player: {},
   isNighttime: true,
@@ -29,10 +30,9 @@ const gameState = {
 window.gameState = gameState; // for debugging
 window.socket = socket; // for debugging
 
-socket.on('sunrise', (services, players) => {
+socket.on('sunrise', (services) => {
   gameState.services = services;
   gameState.isNighttime = false;
-  gameState.players = players;
 });
 
 socket.on('reshuffle', (services) => {
@@ -44,6 +44,10 @@ socket.on('nightfall', (services) => {
   gameState.services = services;
   gameState.isNighttime = true;
   gameState.sunriseTime = Date.now() + NIGHT_LENGTH;
+});
+
+socket.on('playersUpdated', (players) => {
+  gameState.players = players;
 });
 
 const renderPlayer = (sketch, { name, avatarId }, xPos, yPos) => {
@@ -201,7 +205,31 @@ const start = () => new P5((sketch) => {
     sketch.fill('grey');
     sketch.noStroke();
     sketch.rect(CANVAS_WIDTH / 2, CANVAS_HEIGHT - 50, CANVAS_WIDTH, 150);
-    gameState.players.forEach((p, i) => renderPlayer(sketch, p, 60 + i * 120, CANVAS_HEIGHT - 70));
+    gameState.players.forEach((p, i) => {
+      const xPos = 60 + i * 120;
+      const yPos = CANVAS_HEIGHT - 70;
+      renderPlayer(sketch, p, xPos, yPos);
+
+      p.accusers.forEach((accuser, j) => {
+        renderPlayer(sketch, accuser, xPos, yPos - (110 + j * 110));
+      });
+
+      const fireBtn = gameState.fireBtns[p.avatarId];
+      if (!fireBtn) {
+        const btn = sketch.createButton('FIRE');
+        gameState.fireBtns[p.avatarId] = btn;
+        btn.mousePressed(() => {
+          btn.hide();
+          // TODO: hide other buttons
+          socket.emit('voteCast', { voter: gameState.player, accused: p });
+        });
+      } else {
+        fireBtn.position(
+          sketch.canvas.offsetLeft + xPos,
+          sketch.canvas.offsetTop + CANVAS_HEIGHT - 100,
+        );
+      }
+    });
   };
 
   // AUTO TEST - TO BE DELETED

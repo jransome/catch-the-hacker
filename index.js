@@ -26,17 +26,23 @@ class Player {
     this.socket = playerSocket;
     this.role = null;
     this.avatarId = avatarId;
-  }
-
-  sendMessage(eventName, args) {
-    this.socket.emit(eventName, ...args);
+    this.accusers = [];
   }
 
   get clientData() {
     return {
       name: this.name,
       avatarId: this.avatarId,
+      accusers: this.accusers,
     }
+  }
+
+  sendMessage(eventName, args) {
+    this.socket.emit(eventName, ...args);
+  }
+
+  gotVotedBy(accuser) {
+    this.accusers.push(accuser)
   }
 }
 
@@ -93,6 +99,7 @@ class Game {
     this.players.push(playerInstance);
 
     playerSocket.on('hacked', this._onServiceHacked.bind(this));
+    playerSocket.on('voteCast', this._onVoteCast.bind(this));
 
     return playerInstance;
   }
@@ -139,7 +146,8 @@ class Game {
     console.log("day", this.dayCounter, "started...");
 
     // 1. alert everyone (if service hacked) people need to stay wheree they were during the night so discussion can happen
-    socketServer.emit('sunrise', this.services, this.players.map(p => p.clientData));
+    socketServer.emit('sunrise', this.services);
+    this._emitUpdatePlayers();
 
     // 2. discussion and voting and firing
 
@@ -181,9 +189,19 @@ class Game {
     }, NIGHT_LENGTH);
   }
 
+  _emitUpdatePlayers() {
+    socketServer.emit('playersUpdated', this.players.map(p => p.clientData));
+  }
+
   _onServiceHacked(serviceName) {
     const hackedService = this.services.find(s => s.name === serviceName)
     hackedService && hackedService.hack()
+  }
+
+  _onVoteCast({ voter, accused }) {
+    const accusedPlayer = this.players.find(p => p.name === accused.name);
+    accusedPlayer.gotVotedBy(voter);
+    this._emitUpdatePlayers();
   }
 }
 
