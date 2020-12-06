@@ -31,6 +31,13 @@ class Player {
   sendMessage(eventName, args) {
     this.socket.emit(eventName, ...args);
   }
+
+  get clientData() {
+    return {
+      name: this.name,
+      avatarId: this.avatarId,
+    }
+  }
 }
 
 class Service {
@@ -62,10 +69,7 @@ class Service {
   }
 
   assignWorker(player) {
-    this.workers.push({
-      name: player.name,
-      avatarId: player.avatarId,
-    });
+    this.workers.push(player.clientData);
   }
 }
 
@@ -135,7 +139,7 @@ class Game {
     console.log("day", this.dayCounter, "started...");
 
     // 1. alert everyone (if service hacked) people need to stay wheree they were during the night so discussion can happen
-    socketServer.emit('sunrise', this.services);
+    socketServer.emit('sunrise', this.services, this.players.map(p => p.clientData));
 
     // 2. discussion and voting and firing
 

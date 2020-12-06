@@ -4,12 +4,12 @@ const { p5: P5 } = window;
 
 const NIGHT_LENGTH = 10000;
 
-const CANVAS_HEIGHT = 600;
-const CANVAS_WIDTH = 1000;
+const CANVAS_HEIGHT = 800;
+const CANVAS_WIDTH = 1400;
 const N_AVATARS = 12;
 
 // Services layout
-const MAX_ROW_LENGTH = 3;
+const MAX_ROW_LENGTH = 4;
 const COLUMN_SPACING = 330;
 const ROW_SPACING = 250;
 const TOP_MARGIN = 150;
@@ -21,16 +21,18 @@ const avatarImages = [];
 
 const gameState = {
   services: [],
-  servicesHackUi: {},
+  hackBtns: {},
+  players: [],
   player: {},
   isNighttime: true,
 };
 window.gameState = gameState; // for debugging
 window.socket = socket; // for debugging
 
-socket.on('sunrise', (services) => {
+socket.on('sunrise', (services, players) => {
   gameState.services = services;
   gameState.isNighttime = false;
+  gameState.players = players;
 });
 
 socket.on('reshuffle', (services) => {
@@ -83,16 +85,16 @@ const renderService = (sketch, service, index) => {
     renderPlayer(sketch, w, position[0] + (i - 1) * 80, position[1] + 70);
   });
 
-  const hackBtn = gameState.servicesHackUi[service.name];
+  const hackBtn = gameState.hackBtns[service.name];
   if (
     gameState.isNighttime
     && !hackBtn
     && gameState.player.role === 'HACKER'
     && service.workers.find(w => w.name === gameState.player.name)
   ) {
-    gameState.servicesHackUi[service.name] = sketch.createButton('hack');
-    gameState.servicesHackUi[service.name].mousePressed(() => {
-      gameState.servicesHackUi[service.name].hide();
+    gameState.hackBtns[service.name] = sketch.createButton('hack');
+    gameState.hackBtns[service.name].mousePressed(() => {
+      gameState.hackBtns[service.name].hide();
       socket.emit('hacked', service.name);
     });
   } else if (!gameState.isNighttime && hackBtn) {
@@ -194,14 +196,13 @@ const start = () => new P5((sketch) => {
 
     // draw services
     gameState.services = gameState.services.map((s, i) => renderService(sketch, s, i));
-  };
 
-  // eslint-disable-next-line no-param-reassign
-  // sketch.mouseReleased = () => {
-  //   gameState.services.forEach((s) =>
-  //     s.checkClicked(sketch.mouseX, sketch.mouseY)
-  //   );
-  // };
+    // draw voting ballot
+    sketch.fill('grey');
+    sketch.noStroke();
+    sketch.rect(CANVAS_WIDTH / 2, CANVAS_HEIGHT - 50, CANVAS_WIDTH, 150);
+    gameState.players.forEach((p, i) => renderPlayer(sketch, p, 60 + i * 120, CANVAS_HEIGHT - 70));
+  };
 
   // AUTO TEST - TO BE DELETED
   setTimeout(() => {
