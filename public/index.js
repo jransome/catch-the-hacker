@@ -215,15 +215,14 @@ const start = () => new P5((sketch) => {
       });
 
       const fireBtn = gameState.fireBtns[p.avatarId];
-      if (!fireBtn) {
+      if (!fireBtn && p.name !== gameState.player.name) {
         const btn = sketch.createButton('FIRE');
         gameState.fireBtns[p.avatarId] = btn;
         btn.mousePressed(() => {
-          btn.hide();
-          // TODO: hide other buttons
+          Object.values(gameState.fireBtns).forEach(b => b.hide());
           socket.emit('voteCast', { voter: gameState.player, accused: p });
         });
-      } else {
+      } else if (fireBtn) {
         fireBtn.position(
           sketch.canvas.offsetLeft + xPos,
           sketch.canvas.offsetTop + CANVAS_HEIGHT - 100,
