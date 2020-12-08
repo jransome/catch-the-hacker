@@ -74,7 +74,12 @@ const renderService = (sketch, service, index) => {
 
   sketch.noStroke();
 
-  const serviceColour = sketch.color(0, 204, 0);
+  const serviceColours = [
+    sketch.color(200, 0, 0), //red
+    sketch.color(255,140,0), //orange
+    sketch.color(0, 204, 0), //green
+  ]
+  
   if (service.hackedLastNight) {
     if (new Date().getSeconds() % 2) {
       sketch.stroke('red');
@@ -82,7 +87,7 @@ const renderService = (sketch, service, index) => {
     }
   }
 
-  sketch.fill(serviceColour);
+  sketch.fill(serviceColours[service.lives -1]);
   sketch.rect(...position, ...SERVICE_SIZE);
 
   const textColour = sketch.color(255, 255, 255);
@@ -248,13 +253,13 @@ const start = () => new P5((sketch) => {
   };
 
   // AUTO TEST - TO BE DELETED
-  setTimeout(() => {
-    const name = ['boris', 'trump', 'lala', 'blahla', 'a', 'b', 'c', 'haha', 'dog'][
-      Math.floor(Math.random() * 9)
-    ];
-    nameInput.value(name + Date.now().toString().slice(-4));
-    onNameSubmitPressed();
-  }, 500);
+  // setTimeout(() => {
+  //   const name = ['boris', 'trump', 'lala', 'blahla', 'a', 'b', 'c', 'haha', 'dog'][
+  //     Math.floor(Math.random() * 9)
+  //   ];
+  //   nameInput.value(name + Date.now().toString().slice(-4));
+  //   onNameSubmitPressed();
+  // }, 500);
 }, gameContainer);
 
 start();
