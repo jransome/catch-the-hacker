@@ -29,6 +29,7 @@ const gameState = {
   players: [],
   player: {},
   isNighttime: true,
+  iVoted: false,
 };
 window.gameState = gameState; // for debugging
 window.socket = socket; // for debugging
@@ -36,6 +37,7 @@ window.socket = socket; // for debugging
 socket.on('sunrise', (services) => {
   gameState.services = services;
   gameState.isNighttime = false;
+  gameState.iVoted = false;
 });
 
 socket.on('reshuffle', (services) => {
@@ -50,6 +52,7 @@ socket.on('nightfall', (services) => {
 
 socket.on('playersUpdated', (players) => {
   gameState.players = players;
+  gameState.player.isFired = players.find(p => p.avatarId === gameState.player.avatarId).isFired;
 });
 
 const renderPlayer = (sketch, { name, avatarId, isFired }, xPos, yPos) => {
@@ -126,6 +129,16 @@ const renderService = (sketch, service, index) => {
   return service;
 };
 
+const createFireBtnForPlayer = (sketch, p) => {
+  const btn = sketch.createButton('FIRE');
+  btn.mousePressed(() => {
+    gameState.iVoted = true;
+    Object.values(gameState.fireBtns).forEach(b => b.hide());
+    socket.emit('voteCast', { accuser: gameState.player, accused: p });
+  });
+  return btn;
+};
+
 const renderVotingUi = (sketch) => {
   sketch.fill('grey');
   sketch.noStroke();
@@ -134,30 +147,26 @@ const renderVotingUi = (sketch) => {
   gameState.players.forEach((p, i) => {
     const xPos = 60 + i * 120;
     const yPos = CANVAS_HEIGHT - 70;
+
+    // render player avatars
     renderPlayer(sketch, p, xPos, yPos);
 
+    // render accusers on top of player avatars
     p.accusers.forEach((accuser, j) => {
       renderPlayer(sketch, accuser, xPos, yPos - (110 + j * 110));
     });
 
-    if (gameState.isNighttime) return;
+    // Don't render the fire buttons if it's for yourself, the player or target player is already fired, it's nighttime, or the player has already voted
+    if (p.name === gameState.player.name || gameState.player.isFired || p.isFired || gameState.isNighttime || gameState.iVoted) return;
 
-    // TODO: firebtn not showing up on night 2
-
+    gameState.fireBtns[p.avatarId] ??= createFireBtnForPlayer(sketch, p); // create buttons if they don't exist
     const fireBtn = gameState.fireBtns[p.avatarId];
-    if (!fireBtn && p.name !== gameState.player.name) {
-      const btn = sketch.createButton('FIRE');
-      gameState.fireBtns[p.avatarId] = btn;
-      btn.mousePressed(() => {
-        Object.values(gameState.fireBtns).forEach(b => b.hide());
-        socket.emit('voteCast', { accuser: gameState.player, accused: p });
-      });
-    } else if (fireBtn) {
-      fireBtn.position(
-        sketch.canvas.offsetLeft + xPos - 10,
-        sketch.canvas.offsetTop + CANVAS_HEIGHT - 100,
-      );
-    }
+
+    fireBtn.show();
+    fireBtn.position(
+      sketch.canvas.offsetLeft + xPos - 10,
+      sketch.canvas.offsetTop + CANVAS_HEIGHT - 100,
+    );
   });
 };
 
@@ -172,7 +181,6 @@ const start = () => new P5((sketch) => {
   const NIGHT_COLOUR = sketch.color(100, 10, 250);
 
   const onNameSubmitPressed = () => {
-    console.log('submit pressed', nameInput.value());
     if (!nameInput.value()) return;
     socket.emit('login', nameInput.value());
     nameInput.hide();

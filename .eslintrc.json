@@ -9,13 +9,12 @@
     "airbnb-base"
   ],
   "parserOptions": {
-    "ecmaVersion": 11
+    "ecmaVersion": 12
   },
   "rules": {
     "no-underscore-dangle": "off",
     "object-curly-newline": "off",
     "no-plusplus": "off",
-    "no-console": "off",
     "arrow-parens": [
       2,
       "as-needed",
