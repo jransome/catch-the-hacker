@@ -75,11 +75,11 @@ const renderService = (sketch, service, index) => {
   sketch.noStroke();
 
   const serviceColours = [
-    sketch.color(200, 0, 0), //red
-    sketch.color(255,140,0), //orange
-    sketch.color(0, 204, 0), //green
-  ]
-  
+    sketch.color(200, 0, 0), // red
+    sketch.color(255, 140, 0), // orange
+    sketch.color(0, 204, 0), // green
+  ];
+
   if (service.hackedLastNight) {
     if (new Date().getSeconds() % 2) {
       sketch.stroke('red');
@@ -87,7 +87,7 @@ const renderService = (sketch, service, index) => {
     }
   }
 
-  sketch.fill(serviceColours[service.lives -1]);
+  sketch.fill(serviceColours[service.lives - 1]);
   sketch.rect(...position, ...SERVICE_SIZE);
 
   const textColour = sketch.color(255, 255, 255);
@@ -142,7 +142,7 @@ const renderVotingUi = (sketch) => {
 
     if (gameState.isNighttime) return;
 
-  // TODO: firebtn not showing up on night 2
+    // TODO: firebtn not showing up on night 2
 
     const fireBtn = gameState.fireBtns[p.avatarId];
     if (!fireBtn && p.name !== gameState.player.name) {
