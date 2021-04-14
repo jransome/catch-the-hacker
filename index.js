@@ -195,7 +195,6 @@ class Game {
     // allow hacks to happen
     // allow immunisation to happen
     socketServer.emit('nightfall', this.services);
-    this._emitUpdatePlayers();
 
     // set 1 minute timer till sunrise
     setTimeout(() => {
@@ -219,21 +218,20 @@ class Game {
     this._emitUpdatePlayers();
     this.accusers.push(accuser);
 
-    if (this.accusers.length === this.activePlayers.length) {
-      let fired = { accusers: [] };
-      this.players.forEach(p => {
-        if (p.accusers.length > fired.accusers.length) {
-          fired = p
-        }
+    if (this.accusers.length === this.activePlayers.length) { // everybody's voted
+      const fired = this.players.reduce((highestVotedSoFar, p) => { // find the most accused player
+        return p.accusers.length > highestVotedSoFar.accusers.length ? p : highestVotedSoFar;
       });
+
       console.log(fired.name, 'was FIRED');
       fired.fire();
 
       // reset stuff
       this.accusers.length = 0;
       this.players.forEach(p => p.clearAccusers());
-
+      
       this._shuffleWorkers();
+      this._emitUpdatePlayers();
       this._nightfall();
     }
   }

@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "node .",
-    "start:dev": "nodemon ."
+    "dev": "nodemon ."
   },
   "author": "",
   "license": "ISC",
