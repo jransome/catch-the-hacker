@@ -3,8 +3,12 @@
     "browser": true,
     "commonjs": true,
     "es2020": true,
-    "node": true
+    "node": true,
+    "mocha": true
   },
+  "plugins": [
+    "wdio"
+  ],
   "extends": [
     "airbnb-base"
   ],

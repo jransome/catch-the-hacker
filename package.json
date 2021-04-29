@@ -8,7 +8,8 @@
   },
   "scripts": {
     "start": "node .",
-    "dev": "nodemon ."
+    "dev": "nodemon .",
+    "test": "node_modules/.bin/wdio run ./wdio.conf.js"
   },
   "author": "",
   "license": "ISC",
@@ -17,9 +18,16 @@
     "socket.io": "^2.3.0"
   },
   "devDependencies": {
+    "@wdio/cli": "^7.5.2",
+    "@wdio/local-runner": "^7.5.2",
+    "@wdio/mocha-framework": "^7.5.2",
+    "@wdio/spec-reporter": "^7.5.2",
+    "chromedriver": "^90.0.0",
     "eslint": "^7.6.0",
     "eslint-config-airbnb-base": "^14.2.0",
     "eslint-plugin-import": "^2.22.0",
-    "nodemon": "^2.0.6"
+    "eslint-plugin-wdio": "^7.4.2",
+    "nodemon": "^2.0.6",
+    "wdio-chromedriver-service": "^7.0.0"
   }
 }
