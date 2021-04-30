@@ -110,8 +110,7 @@ const start = () => new P5((sketch) => {
     if (name) {
       sketch.fill(gameState.isNighttime ? 255 : 30);
       sketch.textSize(20);
-      sketch.createP(`${name}: ${role}`).position(CANVAS_WIDTH - 200, 45).id('playerNameInfo');
-      // sketch.text(`${name}: ${role}`, CANVAS_WIDTH - 200, 45);
+      sketch.text(`${name}: ${role}`, CANVAS_WIDTH - 200, 45);
       renderPlayer(sketch, { role, avatarId }, CANVAS_WIDTH - 60, 45);
     }
 

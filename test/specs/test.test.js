@@ -1,44 +1,99 @@
 const { multiremote } = require('webdriverio');
 
-describe('waffles', () => {
-  it('blah', async () => {
-    const browser = await multiremote({
+describe('Gameplay tests', () => {
+  let browser = null;
+
+  afterEach(() => {
+    browser.deleteSession();
+  });
+
+  it('Renders expected UI after multiple night cycles', async () => {
+    browser = await multiremote({
       player1: { capabilities: { browserName: 'chrome' } },
       player2: { capabilities: { browserName: 'chrome' } },
       player3: { capabilities: { browserName: 'chrome' } },
     });
 
+    const player1Name = 'Bacon';
+    const player2Name = 'Eggz';
+    const player3Name = 'Wafflez';
+
     await browser.url('http://localhost:3000');
-    const { player1, player2, player3 } = browser;
-    // const players = [player1, player2, player3];
+    const nameInput = await browser.$('#nameInput');
+    const nameSubmit = await browser.$('#nameSubmitBtn');
 
-    const nameInput1 = await player1.$('#nameInput');
-    const nameInput2 = await player2.$('#nameInput');
-    const nameInput3 = await player3.$('#nameInput');
+    await nameInput.player1.setValue(player1Name);
+    await nameSubmit.player1.click();
 
-    const player1Name = 'bacon';
-    const player2Name = 'facon';
-    const player3Name = 'dacon';
-    await nameInput1.setValue(player1Name);
-    await nameInput2.setValue(player2Name);
-    await nameInput3.setValue(player3Name);
+    await nameInput.player2.setValue(player2Name);
+    await nameSubmit.player2.click();
 
-    (await player1.$('#nameSubmitBtn')).click();
-    (await player2.$('#nameSubmitBtn')).click();
-    (await player3.$('#nameSubmitBtn')).click();
-    await browser.pause(5000);
+    await nameInput.player3.setValue(player3Name);
+    await nameSubmit.player3.click();
 
-    (await player1.$('#everybodysInBtn')).click();
+    await browser.pause(2000);
+    (await browser.player1.$('#everybodysInBtn')).click();
 
-    await expect(player1.$('#playerNameInfo')).toBeExisting();
-    await expect(player1.$('#playerNameInfo')).toHaveTextContaining(player1Name);
-    await expect(player2.$('#playerNameInfo')).toBeExisting();
-    await expect(player2.$('#playerNameInfo')).toHaveTextContaining(player2Name);
-    await expect(player3.$('#playerNameInfo')).toBeExisting();
-    await expect(player3.$('#playerNameInfo')).toHaveTextContaining(player3Name);
+    // wait for the night 1 to end
+    await browser.pause(3000);
 
-    // wait for the night to end
-    await browser.pause(15000);
-    browser.closeWindow();
+    // players should be able to vote to fire others
+    await expect(browser.player1.$(`#${player1Name}FireBtn`)).not.toBeExisting();
+    const baconFireEggsBtn = await browser.player1.$(`#${player2Name}FireBtn`);
+    await expect(baconFireEggsBtn).toBeVisible();
+    await expect(browser.player1.$(`#${player3Name}FireBtn`)).toBeVisible();
+
+    await expect(browser.player2.$(`#${player2Name}FireBtn`)).not.toBeExisting();
+    const eggzFireBaconBtn = await browser.player2.$(`#${player1Name}FireBtn`);
+    await expect(eggzFireBaconBtn).toBeVisible();
+    await expect(browser.player2.$(`#${player3Name}FireBtn`)).toBeVisible();
+
+    await expect(browser.player3.$(`#${player3Name}FireBtn`)).not.toBeExisting();
+    const wafflesFireBaconBtn = await browser.player3.$(`#${player1Name}FireBtn`);
+    await expect(wafflesFireBaconBtn).toBeVisible();
+    await expect(browser.player3.$(`#${player2Name}FireBtn`)).toBeVisible();
+
+
+
+    // bacon votes to fire eggz
+    // (await browser.player1.$(`#${player2Name}FireBtn`)).click();
+    baconFireEggsBtn.click();
+    // await expect(browser.player1.$(`#${player2Name}FireBtn`)).not.toBeVisible();
+    // await expect(browser.player1.$(`#${player3Name}FireBtn`)).not.toBeVisible();
+
+
+
+    /// ABOVE WORKS, BELOW DOES NOT
+
+
+
+    // eggz votes to fire bacon
+    // (await browser.player2.$(`#${player1Name}FireBtn`)).click();
+    // (await browser.player2.$(`#${player3Name}FireBtn`)).click();
+    eggzFireBaconBtn.click();
+    // await expect(browser.player2.$(`#${player1Name}FireBtn`)).not.toBeVisible();
+    // await expect(browser.player2.$(`#${player3Name}FireBtn`)).not.toBeVisible();
+
+    // waffles votes to fire bacon
+    wafflesFireBaconBtn.click();
+    // (await browser.player3.$(`#${player1Name}FireBtn`)).click();
+    // await expect(browser.player3.$(`#${player1Name}FireBtn`)).not.toBeVisible();
+    // await expect(browser.player3.$(`#${player2Name}FireBtn`)).not.toBeVisible();
+
+    // wait for the night 2 to end
+    await browser.pause(30000);
+
+    // // bacon was fired so they can't vote anymore :'(
+    // await expect(browser.player1.$(`#${player1Name}FireBtn`)).not.toBeExisting();
+    // await expect(browser.player1.$(`#${player2Name}FireBtn`)).not.toBeVisible();
+    // await expect(browser.player1.$(`#${player3Name}FireBtn`)).not.toBeVisible();
+
+    // await expect(browser.player2.$(`#${player2Name}FireBtn`)).not.toBeExisting();
+    // await expect(browser.player2.$(`#${player1Name}FireBtn`)).not.toBeVisible();
+    // await expect(browser.player2.$(`#${player3Name}FireBtn`)).toBeVisible();
+
+    // await expect(browser.player3.$(`#${player3Name}FireBtn`)).not.toBeExisting();
+    // await expect(browser.player3.$(`#${player1Name}FireBtn`)).not.toBeVisible();
+    // await expect(browser.player3.$(`#${player2Name}FireBtn`)).toBeVisible();
   });
 });
