@@ -39,45 +39,56 @@ describe('Gameplay tests', () => {
 
     // players should be able to vote to fire others, but not themselves
     // player 1
-    await expect(browser.player1.$(`#${player1Name}FireBtn`)).not.toBeExisting();
-    await expect(browser.player1.$(`#${player3Name}FireBtn`)).toBeVisible();
+    const baconSelfFireBtn = await browser.player1.$(`#${player1Name}FireBtn`);
+    const baconFireWafflesBtn = await browser.player1.$(`#${player3Name}FireBtn`);
     const baconFireEggsBtn = await browser.player1.$(`#${player2Name}FireBtn`);
+    await expect(baconSelfFireBtn).not.toBeExisting();
+    await expect(baconFireWafflesBtn).toBeVisible();
     await expect(baconFireEggsBtn).toBeVisible();
 
     // player 2
-    await expect(browser.player2.$(`#${player2Name}FireBtn`)).not.toBeExisting();
-    await expect(browser.player2.$(`#${player1Name}FireBtn`)).toBeVisible();
+    const eggzSelfFireBtn = await browser.player2.$(`#${player2Name}FireBtn`);
+    const eggzFireBaconBtn = await browser.player2.$(`#${player1Name}FireBtn`);
     const eggzFireWafflezBtn = await browser.player2.$(`#${player3Name}FireBtn`);
+    await expect(eggzSelfFireBtn).not.toBeExisting();
+    await expect(eggzFireBaconBtn).toBeVisible();
     await expect(eggzFireWafflezBtn).toBeVisible();
 
     // player 3
-    await expect(browser.player3.$(`#${player3Name}FireBtn`)).not.toBeExisting();
-    await expect(browser.player3.$(`#${player1Name}FireBtn`)).toBeVisible();
+    const wafflesSelfFireBtn = await browser.player3.$(`#${player3Name}FireBtn`);
+    const wafflesFireBaconBtn = await browser.player3.$(`#${player1Name}FireBtn`);
     const wafflesFireEggzBtn = await browser.player3.$(`#${player2Name}FireBtn`);
+    await expect(wafflesSelfFireBtn).not.toBeExisting();
+    await expect(wafflesFireBaconBtn).toBeVisible();
     await expect(wafflesFireEggzBtn).toBeVisible();
 
     // do voting - eggs gets fired :'(
     baconFireEggsBtn.click();
     await expect(baconFireEggsBtn).not.toBeVisible();
+    await expect(baconFireWafflesBtn).not.toBeVisible();
+
     eggzFireWafflezBtn.click();
     await expect(eggzFireWafflezBtn).not.toBeVisible();
+    await expect(eggzFireBaconBtn).not.toBeVisible();
+
     wafflesFireEggzBtn.click();
     await expect(wafflesFireEggzBtn).not.toBeVisible();
+    await expect(wafflesFireBaconBtn).not.toBeVisible();
 
     // wait for the night 2 to end
     await browser.pause(3000);
 
     // assert that fired players can't vote, and that can active players can't vote to fire players who have already been fired
-    await expect(browser.player1.$(`#${player1Name}FireBtn`)).not.toBeExisting();
-    await expect(browser.player1.$(`#${player3Name}FireBtn`)).toBeVisible();
+    await expect(baconSelfFireBtn).not.toBeExisting();
+    await expect(baconFireWafflesBtn).toBeVisible();
     await expect(baconFireEggsBtn).not.toBeVisible();
 
-    await expect(browser.player2.$(`#${player2Name}FireBtn`)).not.toBeExisting();
-    await expect(browser.player2.$(`#${player1Name}FireBtn`)).not.toBeVisible();
+    await expect(eggzSelfFireBtn).not.toBeExisting();
+    await expect(eggzFireBaconBtn).not.toBeVisible();
     await expect(eggzFireWafflezBtn).not.toBeVisible();
 
-    await expect(browser.player3.$(`#${player3Name}FireBtn`)).not.toBeExisting();
-    await expect(browser.player3.$(`#${player1Name}FireBtn`)).toBeVisible();
+    await expect(wafflesSelfFireBtn).not.toBeExisting();
+    await expect(wafflesFireBaconBtn).toBeVisible();
     await expect(wafflesFireEggzBtn).not.toBeVisible();
   });
 });
