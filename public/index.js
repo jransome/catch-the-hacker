@@ -1,26 +1,13 @@
+import { NIGHT_LENGTH, N_AVATARS, CANVAS_WIDTH, CANVAS_HEIGHT } from './constants.js';
 import socket from './socket.js';
+import images from './images.js';
+import renderPlayer from './views/player.js';
+import renderService from './views/service.js';
+import renderVotingUi from './views/voting.js';
 
 const { p5: P5 } = window;
 
-const NIGHT_LENGTH = 10000;
-
-const CANVAS_HEIGHT = 800;
-const CANVAS_WIDTH = 1400;
-const N_AVATARS = 12;
-
-// Services layout
-const MAX_ROW_LENGTH = 4;
-const COLUMN_SPACING = 330;
-const ROW_SPACING = 250;
-const TOP_MARGIN = 150;
-const LEFT_MARGIN = 180;
-const SERVICE_SIZE = [250, 50];
-
 const gameContainer = document.getElementById('game');
-const images = {
-  avatarImages: [],
-  fired: null,
-};
 
 const gameState = {
   hackBtns: {},
@@ -54,121 +41,6 @@ socket.on('playersUpdated', (players) => {
   gameState.players = players;
   gameState.player.isFired = players.find(p => p.avatarId === gameState.player.avatarId).isFired;
 });
-
-const renderPlayer = (sketch, { name, avatarId, isFired }, xPos, yPos) => {
-  sketch.image(images.avatarImages[avatarId], xPos, yPos);
-  sketch.textSize(18);
-  sketch.fill(255);
-  sketch.textStyle(sketch.BOLD);
-  sketch.text(name, xPos, yPos + 50);
-  if (isFired) {
-    sketch.image(images.fired, xPos, yPos);
-  }
-};
-
-const renderService = (sketch, service, index) => {
-  const colNumber = index % MAX_ROW_LENGTH;
-  const rowNumber = Math.floor(index / MAX_ROW_LENGTH);
-
-  const position = [
-    LEFT_MARGIN + colNumber * COLUMN_SPACING,
-    TOP_MARGIN + rowNumber * ROW_SPACING,
-  ];
-
-  sketch.noStroke();
-
-  const serviceColours = [
-    sketch.color(200, 0, 0), // red
-    sketch.color(255, 140, 0), // orange
-    sketch.color(0, 204, 0), // green
-  ];
-
-  if (service.hackedLastNight) {
-    if (new Date().getSeconds() % 2) {
-      sketch.stroke('red');
-      sketch.strokeWeight(4);
-    }
-  }
-
-  sketch.fill(serviceColours[service.lives - 1]);
-  sketch.rect(...position, ...SERVICE_SIZE);
-
-  const textColour = sketch.color(255, 255, 255);
-  sketch.fill(textColour);
-  sketch.textSize(24);
-  sketch.text(service.name, ...position);
-
-  service.workers.forEach((w, i) => {
-    renderPlayer(sketch, w, position[0] + (i - 1) * 80, position[1] + 70);
-  });
-
-  const hackBtn = gameState.hackBtns[service.name];
-  // TODO: hackbtn not showing up on day 2
-  if (
-    gameState.isNighttime
-    && !hackBtn
-    && gameState.player.role === 'HACKER'
-    && service.workers.find(w => w.name === gameState.player.name)
-  ) {
-    gameState.hackBtns[service.name] = sketch.createButton('hack');
-    gameState.hackBtns[service.name].mousePressed(() => {
-      gameState.hackBtns[service.name].hide();
-      socket.emit('hacked', service.name);
-    });
-  } else if (!gameState.isNighttime && hackBtn) {
-    hackBtn.hide();
-  }
-
-  if (hackBtn) {
-    hackBtn.position(
-      sketch.canvas.offsetLeft + position[0],
-      sketch.canvas.offsetTop + position[1],
-    );
-  }
-
-  return service;
-};
-
-const createFireBtnForPlayer = (sketch, p) => {
-  const btn = sketch.createButton('FIRE');
-  btn.mousePressed(() => {
-    gameState.iVoted = true;
-    Object.values(gameState.fireBtns).forEach(b => b.hide());
-    socket.emit('voteCast', { accuser: gameState.player, accused: p });
-  });
-  return btn;
-};
-
-const renderVotingUi = (sketch) => {
-  sketch.fill('grey');
-  sketch.noStroke();
-  sketch.rect(CANVAS_WIDTH / 2, CANVAS_HEIGHT - 50, CANVAS_WIDTH, 150);
-
-  gameState.players.forEach((p, i) => {
-    const xPos = 60 + i * 120;
-    const yPos = CANVAS_HEIGHT - 70;
-
-    // render player avatars
-    renderPlayer(sketch, p, xPos, yPos);
-
-    // render accusers on top of player avatars
-    p.accusers.forEach((accuser, j) => {
-      renderPlayer(sketch, accuser, xPos, yPos - (110 + j * 110));
-    });
-
-    // Don't render the fire buttons if it's for yourself, the player or target player is already fired, it's nighttime, or the player has already voted
-    if (p.name === gameState.player.name || gameState.player.isFired || p.isFired || gameState.isNighttime || gameState.iVoted) return;
-
-    gameState.fireBtns[p.avatarId] ??= createFireBtnForPlayer(sketch, p); // create buttons if they don't exist
-    const fireBtn = gameState.fireBtns[p.avatarId];
-
-    fireBtn.show();
-    fireBtn.position(
-      sketch.canvas.offsetLeft + xPos - 10,
-      sketch.canvas.offsetTop + CANVAS_HEIGHT - 100,
-    );
-  });
-};
 
 const start = () => new P5((sketch) => {
   const nameInput = sketch
@@ -254,10 +126,10 @@ const start = () => new P5((sketch) => {
     }
 
     // draw services
-    gameState.services = gameState.services.map((s, i) => renderService(sketch, s, i));
+    gameState.services = gameState.services.map((s, i) => renderService(gameState, sketch, s, i));
 
     // draw voting ui
-    renderVotingUi(sketch);
+    renderVotingUi(gameState, sketch);
   };
 
   // AUTO TEST - TO BE DELETED
@@ -271,7 +143,3 @@ const start = () => new P5((sketch) => {
 }, gameContainer);
 
 start();
-
-// export default {
-//   start,
-// };
