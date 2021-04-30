@@ -3,7 +3,7 @@ import socket from '../socket.js';
 import renderPlayer from './player.js';
 
 const createFireBtnForPlayer = (gameState, sketch, p) => {
-  const btn = sketch.createButton('FIRE');
+  const btn = sketch.createButton('FIRE').id(`${p.name}FireBtn`);
   btn.mousePressed(() => {
     // eslint-disable-next-line no-param-reassign
     gameState.iVoted = true;

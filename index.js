@@ -4,7 +4,7 @@ const express = require("express");
 const socket = require("socket.io");
 const { shuffle } = require("./helpers");
 
-const NIGHT_LENGTH = 10000;
+const NIGHT_LENGTH = 2000; // TODO: refactor to shared constants
 
 const PORT = process.env.PORT || 3000;
 const app = express();

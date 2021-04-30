@@ -45,9 +45,10 @@ socket.on('playersUpdated', (players) => {
 const start = () => new P5((sketch) => {
   const nameInput = sketch
     .createInput()
-    .attribute('placeholder', 'Enter your name');
-  const nameSubmitBtn = sketch.createButton('submit');
-  const everybodyInBtn = sketch.createButton("Everybody's in!").hide();
+    .attribute('placeholder', 'Enter your name')
+    .id('nameInput');
+  const nameSubmitBtn = sketch.createButton('submit').id('nameSubmitBtn');
+  const everybodyInBtn = sketch.createButton("Everybody's in!").id('everybodysInBtn').hide();
 
   const DAY_COLOUR = sketch.color(255, 204, 0);
   const NIGHT_COLOUR = sketch.color(100, 10, 250);
