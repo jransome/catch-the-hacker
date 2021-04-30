@@ -1,4 +1,4 @@
-export const NIGHT_LENGTH = 10000;
+export const NIGHT_LENGTH = 2000;
 
 export const CANVAS_HEIGHT = 800;
 export const CANVAS_WIDTH = 1400;
